@@ -1,0 +1,46 @@
+.input-box {
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* Label takes 1 part, input takes 2 parts */
+    align-items: center; /* Align text and input vertically */
+    gap: 0.75rem; /* Space between rows */
+    width: 100%; /* Takes only half of the screen */
+}
+
+.input {
+    border: 1px solid;
+    height: 2rem;
+    padding: 0.25rem 0.5rem;
+    width: 100%; /* Make input take full available width */
+    border-radius: 0.15rem;
+    color: black;
+}
+
+.input-header {
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: left; /* Align text to left */
+    white-space: nowrap; /* Prevents text wrapping */
+    width: 100%;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .input-box {
+        grid-template-columns: 1fr; /* Stack on smaller screens */
+        width: 100%;
+    }
+
+    .input-header {
+        text-align: left; /* Keep labels aligned left */
+    }
+}
+
+.submit-button {
+    height: 2rem;
+    width: 10rem;
+    border-radius: .5rem;
+    cursor: pointer;
+    color: black; 
+    font-size: 1rem;
+    border: 1px solid black;
+}
