@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
+import { findInterest, findInterestForTable } from '../functions/helper';
 
-const AdjustableTable: React.FC = () => {
+interface adjustableTableProps {
+  yearNumber: number
+  amount: string
+}
+
+const AdjustableTable = (props:adjustableTableProps) => {
+  console.log("year number -->", props.yearNumber)
   const [rows, setRows] = useState<number>(10);
   const [cols, setCols] = useState<number>(10);
-  const [rowHeaders, setRowHeaders] = useState<string[]>(Array.from({ length: 10 }, (_, i) => `Row ${i + 1}`));
-  const [colHeaders, setColHeaders] = useState<string[]>(Array.from({ length: 10 }, (_, i) => `201${i}`));
+  const [rowHeaders, setRowHeaders] = useState<string[]>(Array.from({ length: 10 }, (_, i) => `${i + 1}`));
+  const [colHeaders, setColHeaders] = useState<string[]>(Array.from({ length: 10 }, (_, i) => `${props.yearNumber + i}`));
+
   const [tableData, setTableData] = useState<string[][]>(Array.from({ length: 10 }, () => Array.from({ length: 10 }, () => '')));
 
   const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,23 +29,15 @@ const AdjustableTable: React.FC = () => {
     setTableData(tableData.map(row => row.slice(0, newCols).concat(Array.from({ length: Math.max(0, newCols - row.length) }, () => ''))));
   };
 
-  const handleRowHeaderChange = (index: number, value: string) => {
-    const newRowHeaders = [...rowHeaders];
-    newRowHeaders[index] = value;
-    setRowHeaders(newRowHeaders);
-  };
+  React.useEffect(() => {
+    const newTableData = rowHeaders.map((_, rowIndex) =>
+      colHeaders.map((_, colIndex) => findInterestForTable(props.amount, colIndex.toString(), rowIndex.toString()).toString())
+    );
+  
+    setTableData(newTableData);
+  }, [props.amount, props.yearNumber]);
 
-  const handleColHeaderChange = (index: number, value: string) => {
-    const newColHeaders = [...colHeaders];
-    newColHeaders[index] = value;
-    setColHeaders(newColHeaders);
-  };
-
-  const handleCellChange = (rowIndex: number, colIndex: number, value: string) => {
-    const newData = tableData.map(row => [...row]);
-    newData[rowIndex][colIndex] = value;
-    setTableData(newData);
-  };
+  console.log("---->",tableData)
 
   return (
     <div>
@@ -51,18 +51,13 @@ const AdjustableTable: React.FC = () => {
           <input type="number" value={cols} onChange={handleColsChange} min="1" />
         </label>
       </div>
-      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', marginTop: '20px' }}>
         <thead>
           <tr>
             <th style={{ border: '1px solid black', padding: '8px' }}></th>
             {colHeaders.slice(0, cols).map((header, index) => (
               <th key={index} style={{ border: '1px solid black', padding: '8px' }}>
-                <input
-                  type="text"
-                  value={header}
-                  onChange={(e) => handleColHeaderChange(index, e.target.value)}
-                  style={{ width: '100%', boxSizing: 'border-box' }}
-                />
+                <p>{header}</p>
               </th>
             ))}
           </tr>
@@ -71,21 +66,11 @@ const AdjustableTable: React.FC = () => {
           {tableData.slice(0, rows).map((row, rowIndex) => (
             <tr key={rowIndex}>
               <td style={{ border: '1px solid black', padding: '8px' }}>
-                <input
-                  type="text"
-                  value={rowHeaders[rowIndex]}
-                  onChange={(e) => handleRowHeaderChange(rowIndex, e.target.value)}
-                  style={{ width: '100%', boxSizing: 'border-box' }}
-                />
+                <p>{rowIndex + 1}</p>
               </td>
               {row.slice(0, cols).map((cell, colIndex) => (
                 <td key={colIndex} style={{ border: '1px solid black', padding: '8px' }}>
-                  <input
-                    type="text"
-                    value={cell}
-                    onChange={(e) => handleCellChange(rowIndex, colIndex, e.target.value)}
-                    style={{ width: '100%', boxSizing: 'border-box' }}
-                  />
+                  <p>{Number(cell).toFixed(2)}</p>
                 </td>
               ))}
             </tr>

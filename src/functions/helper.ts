@@ -23,6 +23,15 @@ export function findInterest(amount: string, interest: string, date: string): nu
     return futureValue;
 }
 
+export function findInterestForTable(amount:string, interest:string, year:string){
+    const amountNumber = amount.trim() === '' ? 0 : Number(amount);
+    const interestNumber = interest.trim() === '' ? 0 : Number(interest) / 100;
+    const yearNumber = year.trim() === '' ? 0 : Number(year);
+
+    const futureValue = amountNumber * Math.pow(1 + interestNumber/365, 365  * yearNumber);
+    return futureValue
+}
+
 /**
  * Calculates the historical value of an amount based on past inflation rate.
  * @param amount - Present amount as a string (converted to number).

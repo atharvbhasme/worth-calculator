@@ -12,6 +12,8 @@ function App() {
   const [inflation, setInflation] = React.useState<string>('7');
   const [ans, setAns] = React.useState<string>(''); // Use lowercase string
 
+  const yearNumber = new Date(year).getFullYear();
+
   const inputData: inputValueData[] = [
     {
       id: '1',
@@ -88,7 +90,7 @@ function App() {
           {ans}
         </h3>
 
-        <AdjustableTable />
+        <AdjustableTable yearNumber={yearNumber} amount={amount}/>
       </div>
     </div>
   );
