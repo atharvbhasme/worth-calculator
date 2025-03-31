@@ -1,96 +1,114 @@
-import React from 'react'
-import './App.css'
-import InputBox from './components/Input-Box'
-import SubmitButton from './components/Submit-Button'
-import { diffYear, inputValueData } from './types'
-import { calculateYearDifference, findInterest, findPastValue } from './functions/helper'
-import AdjustableTable from './components/AdjustableTable'
+import React from "react";
+import "./App.css";
+import InputBox from "./components/Input-Box";
+import SubmitButton from "./components/Submit-Button";
+import { diffYear, inputValueData } from "./types";
+import {
+  calculateYearDifference,
+  findInterest,
+  findPastValue,
+} from "./functions/helper";
+import AdjustableTable from "./components/AdjustableTable";
 
 function App() {
-  const [amount, setAmount] = React.useState<string>('0');
-  const [year, setYear] = React.useState<string>(new Date().toISOString().split('T')[0]); // Change type to string
-  const [inflation, setInflation] = React.useState<string>('7');
-  const [ans, setAns] = React.useState<string>(''); // Use lowercase string
-
-  const yearNumber = new Date(year).getFullYear();
+  const [amount, setAmount] = React.useState("1000");
+  const [year, setYear] = React.useState(new Date().toISOString().split("T")[0]);
+  const [inflation, setInflation] = React.useState("7");
+  const [ans, setAns] = React.useState("");
+  const [baseYear, setBaseYear] = React.useState(new Date().getFullYear());
 
   const inputData: inputValueData[] = [
     {
-      id: '1',
-      inputHeaderText: 'Enter the amount',
-      inputType: 'number',
-      defaultValue: '0', // Ensure defaultValue is a string
-      placeholder: 'Enter the amount',
-      name: 'amount'
+      id: "1",
+      inputHeaderText: "Enter the amount",
+      inputType: "number",
+      defaultValue: "1000",
+      placeholder: "Enter amount",
+      name: "amount",
     },
     {
-      id: '2',
-      inputHeaderText: 'Enter the Year You want to find Worth',
+      id: "2",
+      inputHeaderText: "Target Year",
       inputType: "date",
-      defaultValue: new Date().toISOString().split('T')[0],
-      name: 'date'
+      defaultValue: new Date().toISOString().split("T")[0],
+      name: "date",
     },
     {
-      id: '3',
-      inputHeaderText: 'Average Inflation Rate',
-      inputType: 'number',
-      defaultValue: '7',
-      placeholder: '7',
-      name: 'interest'
+      id: "3",
+      inputHeaderText: "Rate (%)",
+      inputType: "number",
+      defaultValue: "7",
+      placeholder: "Enter rate",
+      name: "interest",
     },
-  ]
+  ];
 
   const findAns = (event: React.FormEvent) => {
-    event.preventDefault(); // Prevent page refresh
+    event.preventDefault();
+    const noOfYears = calculateYearDifference(year);
+    const finalAmount = noOfYears.isFuture
+      ? findInterest(amount, inflation, year)
+      : findPastValue(amount, inflation, year);
+    setAns(finalAmount.toString());
+  };
 
-    const noOfYears: diffYear = calculateYearDifference(year);
-    if (noOfYears.isFuture) {
-      const finalAmount = findInterest(amount, inflation, year);
-      setAns(finalAmount.toString());
-    } else {
-      const finalAmount = findPastValue(amount, inflation, year);
-      setAns(finalAmount.toString());
-    }
-  }
+  React.useEffect(() => {
+    setBaseYear(new Date(year).getFullYear());
+  }, [year]);
 
   return (
-    <div>
-      <h1 className="text-2xl/7 font-bold text-white-900 sm:truncate sm:text-3xl sm:tracking-tight">
-        🔢 Worth Calculator
-      </h1>
-      <div>
-        <form className="main-input-box" onSubmit={findAns}>
-          <InputBox 
-            headerText={inputData[0].inputHeaderText} 
-            inputType={inputData[0].inputType} 
-            name={inputData[0].name} 
-            placeholder={inputData[0].placeholder} 
-            setState={setAmount} 
+    <div className="p-4 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6 text-center">₹ Worth Calculator</h1>
+      
+      <form onSubmit={findAns} className="grid gap-4 mb-8 md:grid-cols-3">
+        {inputData.map((input) => (
+          <InputBox
+            key={input.id}
+            headerText={input.inputHeaderText}
+            inputType={input.inputType}
+            name={input.name}
+            placeholder={input.placeholder}
+            setState={input.name === 'amount' ? setAmount : 
+                     input.name === 'date' ? setYear : 
+                     setInflation}
           />
-          <InputBox 
-            headerText={inputData[1].inputHeaderText} 
-            inputType={inputData[1].inputType} 
-            name={inputData[1].name} 
-            placeholder={inputData[1].defaultValue} 
-            setState={setYear} 
-          />
-          <InputBox 
-            headerText={inputData[2].inputHeaderText} 
-            inputType={inputData[2].inputType} 
-            name={inputData[2].name} 
-            placeholder={inputData[2].placeholder} 
-            setState={setInflation} 
-          />
-          <SubmitButton buttonText="Submit" buttonType="submit" onClick={() => {}} />
-        </form>
-        <h3 className="text-2xl/7 font-bold text-white-700 sm:truncate sm:text-2xl sm:tracking-tight m-2.5">
-          How much it will be worth in the selected year
-        </h3>
-        <h3 className="text-2xl/7 text-white-500 sm:truncate sm:text-1xl sm:tracking-tight">
-          {ans}
-        </h3>
+        ))}
+        <div className="md:col-span-3">
+          <SubmitButton buttonText="Calculate" />
+        </div>
+      </form>
 
-        <AdjustableTable yearNumber={yearNumber} amount={amount}/>
+      {ans && (
+        <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+          <h2 className="text-xl font-semibold mb-2">
+            {calculateYearDifference(year).isFuture ? 'Future' : 'Past'} Value
+          </h2>
+          <p className="text-2xl font-mono">₹{Number(ans).toFixed(2)}</p>
+        </div>
+      )}
+
+      <div className="space-y-10">
+        <div>
+          <h2 className="text-xl font-semibold mb-3">Future Value Projection</h2>
+          <AdjustableTable
+            baseYear={baseYear}
+            amount={amount}
+            rows={10}
+            cols={10}
+            isFutureTable={true}
+          />
+        </div>
+
+        <div>
+          <h2 className="text-xl font-semibold mb-3">Past Value Calculation</h2>
+          <AdjustableTable
+            baseYear={baseYear}
+            amount={amount}
+            rows={10}
+            cols={10}
+            isFutureTable={false}
+          />
+        </div>
       </div>
     </div>
   );

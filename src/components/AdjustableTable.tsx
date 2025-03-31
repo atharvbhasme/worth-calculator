@@ -1,76 +1,88 @@
-import React, { useState } from 'react';
-import { findInterest, findInterestForTable } from '../functions/helper';
+import React from 'react';
+import { findInterestForTable, findPastValueForTable } from '../functions/helper';
 
-interface adjustableTableProps {
-  yearNumber: number
-  amount: string
+interface AdjustableTableProps {
+  baseYear: number;
+  amount: string;
+  rows: number;
+  cols: number;
+  isFutureTable: boolean;
 }
 
-const AdjustableTable = (props:adjustableTableProps) => {
-  console.log("year number -->", props.yearNumber)
-  const [rows, setRows] = useState<number>(10);
-  const [cols, setCols] = useState<number>(10);
-  const [rowHeaders, setRowHeaders] = useState<string[]>(Array.from({ length: 10 }, (_, i) => `${i + 1}`));
-  const [colHeaders, setColHeaders] = useState<string[]>(Array.from({ length: 10 }, (_, i) => `${props.yearNumber + i}`));
+const AdjustableTable: React.FC<AdjustableTableProps> = ({
+  baseYear,
+  amount,
+  rows,
+  cols,
+  isFutureTable,
+}) => {
+  // Generate year headers
+  const yearHeaders = React.useMemo(() => {
+    return Array.from({ length: rows }, (_, i) => 
+      isFutureTable ? baseYear + i + 1 : baseYear - i - 1
+    ).map(year => year.toString());
+  }, [baseYear, rows, isFutureTable]);
 
-  const [tableData, setTableData] = useState<string[][]>(Array.from({ length: 10 }, () => Array.from({ length: 10 }, () => '')));
+  // Generate interest rate headers
+  const interestHeaders = React.useMemo(() => {
+    return Array.from({ length: cols }, (_, i) => (i + 1).toString());
+  }, [cols]);
 
-  const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newRows = parseInt(e.target.value, 10);
-    setRows(newRows);
-    setRowHeaders(Array.from({ length: newRows }, (_, i) => rowHeaders[i] || `Row ${i + 1}`));
-    setTableData(Array.from({ length: newRows }, (_, i) => tableData[i] || Array.from({ length: cols }, () => '')));
-  };
-
-  const handleColsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newCols = parseInt(e.target.value, 10);
-    setCols(newCols);
-    setColHeaders(Array.from({ length: newCols }, (_, i) => colHeaders[i] || `201${i}`));
-    setTableData(tableData.map(row => row.slice(0, newCols).concat(Array.from({ length: Math.max(0, newCols - row.length) }, () => ''))));
-  };
-
-  React.useEffect(() => {
-    const newTableData = rowHeaders.map((_, rowIndex) =>
-      colHeaders.map((_, colIndex) => findInterestForTable(props.amount, colIndex.toString(), rowIndex.toString()).toString())
+  // Calculate table data with validation
+  const tableData = React.useMemo(() => {
+    const numericAmount = parseFloat(amount) || 0;
+    
+    return yearHeaders.map((_, rowIndex) =>
+      interestHeaders.map((rate, colIndex) => {
+        try {
+          const years = rowIndex + 1;
+          const numericRate = parseFloat(rate) || 0;
+          
+          if (isFutureTable) {
+            const value = findInterestForTable(
+              numericAmount.toString(),
+              numericRate.toString(),
+              years.toString()
+            );
+            return Number(value).toFixed(2);
+          } else {
+            const value = findPastValueForTable(
+              numericAmount.toString(),
+              numericRate.toString(),
+              years.toString()
+            );
+            return Number(value).toFixed(2);
+          }
+        } catch (error) {
+          console.error('Calculation error:', error);
+          return '0.00';
+        }
+      })
     );
-  
-    setTableData(newTableData);
-  }, [props.amount, props.yearNumber]);
-
-  console.log("---->",tableData)
+  }, [amount, yearHeaders, interestHeaders, isFutureTable]);
 
   return (
-    <div>
-      <div>
-        <label>
-          Rows:
-          <input type="number" value={rows} onChange={handleRowsChange} min="1" />
-        </label>
-        <label>
-          Columns:
-          <input type="number" value={cols} onChange={handleColsChange} min="1" />
-        </label>
-      </div>
-      <table style={{ borderCollapse: 'collapse', width: '100%', marginTop: '20px' }}>
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse mt-5">
         <thead>
           <tr>
-            <th style={{ border: '1px solid black', padding: '8px' }}></th>
-            {colHeaders.slice(0, cols).map((header, index) => (
-              <th key={index} style={{ border: '1px solid black', padding: '8px' }}>
-                <p>{header}</p>
+            <th className="border p-2 sticky left-0 bg-white">Year</th>
+            {interestHeaders.map((header, index) => (
+              <th key={index} className="border p-2 min-w-[80px]">
+                {header}%
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {tableData.slice(0, rows).map((row, rowIndex) => (
+          {tableData.map((row, rowIndex) => (
             <tr key={rowIndex}>
-              <td style={{ border: '1px solid black', padding: '8px' }}>
-                <p>{rowIndex + 1}</p>
+              <td className="border p-2 sticky left-0 bg-white font-medium">
+                {yearHeaders[rowIndex]}
               </td>
-              {row.slice(0, cols).map((cell, colIndex) => (
-                <td key={colIndex} style={{ border: '1px solid black', padding: '8px' }}>
-                  <p>{Number(cell).toFixed(2)}</p>
+              {row.map((cell, colIndex) => (
+                <td key={colIndex} className="border p-2">
+                  {cell}
                 </td>
               ))}
             </tr>
